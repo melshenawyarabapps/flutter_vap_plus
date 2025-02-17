@@ -107,9 +107,11 @@ class _MyAppState extends State<MyApp> {
 
   _download() async {
     await Dio().download(
-        "http://file.jinxianyun.com/vap_demo1.mp4", downloadPathList[0]);
+        "https://res.cloudinary.com/dkmchpua1/video/upload/v1737623468/zta2wxsuokcskw0bhar7.mp4",
+        downloadPathList[0]);
     await Dio().download(
-        "http://file.jinxianyun.com/vap_demo2.mp4", downloadPathList[1]);
+        "https://res.cloudinary.com/dkmchpua1/video/upload/v1737624783/vcg9co6yyfqsadgety1n.mp4",
+        downloadPathList[1]);
     setState(() {
       isDownload = true;
     });
