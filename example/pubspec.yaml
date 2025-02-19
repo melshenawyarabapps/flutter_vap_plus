@@ -75,4 +75,5 @@ flutter:
 
   assets:
     - static/demo.mp4
+    - static/video.mp4
     - static/bg.jpeg

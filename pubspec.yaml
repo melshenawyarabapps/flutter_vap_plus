@@ -1,8 +1,8 @@
 name: flutter_vap
 description: Is a native plugin for playing alpha video animation
-version: 1.1.0
-author: qq326646683<326646683@qq.com>,justyouzxy<1120540016@qq.com>
-homepage: https://github.com/qq326646683/flutter_vap
+version: 1.2.0
+author: qq326646683<326646683@qq.com>,justyouzxy<1120540016@qq.com>,Astra1427<1427917847@qq.com>
+homepage: https://github.com/Astra1427/flutter_vap_plus
 
 environment:
   sdk: ^3.5.3

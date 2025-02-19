@@ -1,20 +1,29 @@
 package com.nell.flutter_vap
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Environment
 import android.util.Log
 import android.view.View
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.tencent.qgame.animplayer.AnimConfig
 import com.tencent.qgame.animplayer.AnimView
 import com.tencent.qgame.animplayer.inter.IAnimListener
 import com.tencent.qgame.animplayer.util.ScaleType
+import com.tencent.qgame.animplayer.inter.IFetchResource
+import com.tencent.qgame.animplayer.mix.Resource
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -22,61 +31,90 @@ internal class NativeVapView(
     binaryMessenger: BinaryMessenger,
     context: Context,
     id: Int,
-    creationParams: Map<String?, Any?>?
+    private val creationParams: Map<String?, Any?>?
 ) : MethodChannel.MethodCallHandler, PlatformView {
 
     private val mContext: Context = context
     private val vapView: AnimView = AnimView(context)
-    private val channel: MethodChannel
-    private val eventChannel: EventChannel
-    private var eventSink: EventChannel.EventSink? = null
+    private val channel: MethodChannel =
+        MethodChannel(binaryMessenger, "flutter_vap_controller_${id}")
 
-    init {
-        vapView.setScaleType(ScaleType.FIT_CENTER)
+
+    // 创建一个 CoroutineScope
+    private var myScope: CoroutineScope? =
+        CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate) // 或者 Dispatchers.Default/I // O
+
+    override fun onFlutterViewAttached(flutterView: View) {
+        super.onFlutterViewAttached(flutterView)
+
+        vapView.setScaleType(
+            ScaleType.valueOf(
+                (creationParams?.get("scaleType") ?: "FIT_CENTER").toString()
+            )
+        )
         vapView.setAnimListener(object : IAnimListener {
             override fun onFailed(errorType: Int, errorMsg: String?) {
-                GlobalScope.launch(Dispatchers.Main) {
-                    eventSink?.success(
-                        mapOf(
-                            "status" to "failure",
-                            "errorMsg" to (errorMsg ?: "unknown error")
-                        )
+                val errorInfo = mapOf(
+                    "status" to "failure",
+                    "errorType" to errorType,
+                    "errorMsg" to (errorMsg ?: "unknown error")
+                )
+                Log.d("TAG", "Anim onFailed: $errorInfo")
+                myScope?.launch {
+                    channel.invokeMethod(
+                        "onFailed",
+                        errorInfo
                     )
                 }
+
             }
 
             override fun onVideoComplete() {
-                GlobalScope.launch(Dispatchers.Main) {
-                    eventSink?.success(mapOf("status" to "complete"))
+//                myScope?.launch {
+//                    eventSink?.success(mapOf("status" to "complete"))
+//                }
+                myScope?.launch {
+                    channel.invokeMethod(
+                        "onComplete",
+                        mapOf("status" to "complete")
+                    )
                 }
+
             }
 
             override fun onVideoDestroy() {
                 // Handle video destroy if necessary
+                myScope?.launch {
+                    channel.invokeMethod(
+                        "onDestroy",
+                        mapOf("status" to "destroy")
+                    )
+                }
             }
 
             override fun onVideoRender(frameIndex: Int, config: AnimConfig?) {
                 // Handle video render if necessary
+//                myScope?.launch {
+//                    channel.invokeMethod(
+//                        "onRender",
+//                        mapOf(
+//                            "status" to "render",
+//                            "frameIndex" to frameIndex,
+////                    "config" to config
+//                        )
+//                    )
+//                }
             }
 
             override fun onVideoStart() {
                 // Handle video start if necessary
+                myScope?.launch {
+                    channel.invokeMethod("onStart", mapOf("status" to "start"))
+                }
             }
         })
 
-        channel = MethodChannel(binaryMessenger, "flutter_vap_controller")
         channel.setMethodCallHandler(this)
-
-        eventChannel = EventChannel(binaryMessenger, "flutter_vap_event_channel")
-        eventChannel.setStreamHandler(object : EventChannel.StreamHandler {
-            override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
-                eventSink = events
-            }
-
-            override fun onCancel(arguments: Any?) {
-                eventSink = null
-            }
-        })
     }
 
     override fun getView(): View {
@@ -85,8 +123,6 @@ internal class NativeVapView(
 
     override fun dispose() {
         channel.setMethodCallHandler(null)
-        eventChannel.setStreamHandler(null)
-        eventSink = null
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
@@ -100,6 +136,7 @@ internal class NativeVapView(
                     result.error("INVALID_ARGUMENT", "Path is null", null)
                 }
             }
+
             "playAsset" -> {
                 val asset = call.argument<String>("asset")
                 if (asset != null) {
@@ -109,13 +146,70 @@ internal class NativeVapView(
                     result.error("INVALID_ARGUMENT", "Asset is null", null)
                 }
             }
+
             "stop" -> {
                 vapView.stopPlay()
                 result.success(null)
             }
+
+            "setFetchResource" -> {
+                val rawJson = call.arguments.toString()
+                val gson = Gson()
+                val type = object : TypeToken<List<FetchResourceModel>>() {}.type
+                val list: List<FetchResourceModel> = gson.fromJson(rawJson, type)
+
+                vapView.setFetchResource(
+                    fetchResource = FetchResources(
+                        resources = list
+                    )
+                )
+                result.success(null);
+            }
+
             else -> {
                 result.notImplemented()
             }
         }
     }
 }
+
+
+internal class FetchResources(
+    private val resources: List<FetchResourceModel>
+) : IFetchResource {
+
+
+    override fun fetchImage(resource: Resource, result: (Bitmap?) -> Unit) {
+        Log.d("TAG", "fetchResource: fetchImage ${resource.tag}")
+        resources.firstOrNull {
+            it.tag == resource.tag
+        }?.let {
+            result(BitmapFactory.decodeFile(it.resource))
+        } ?: result(null)
+
+    }
+
+    override fun fetchText(resource: Resource, result: (String?) -> Unit) {
+        Log.d("TAG", "fetchResource: fetchText ${resource.tag}")
+
+        result(
+            resources.firstOrNull {
+                it.tag == resource.tag
+            }?.resource
+        )
+
+    }
+
+    override fun releaseResource(resources: List<Resource>) {
+        resources.forEach {
+            it.bitmap?.recycle()
+        }
+    }
+}
+
+internal class FetchResourceModel(
+    /// vap资源文件中预设的tag
+    val tag: String,
+    /// 图片本地路径或者文本字符串
+    val resource: String,
+)

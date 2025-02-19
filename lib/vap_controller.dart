@@ -1,35 +1,100 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class VapController {
-  static const MethodChannel _methodChannel = MethodChannel('flutter_vap_controller');
-  static const EventChannel _eventChannel = EventChannel('flutter_vap_event_channel');
+  late final MethodChannel _methodChannel;
+  final int viewId;
+  final void Function(dynamic event)? onEvent;
 
-  void init() {
-    _eventChannel.receiveBroadcastStream().listen(_onEvent, onError: _onError);
+  VapController({
+    required this.viewId,
+    this.onEvent,
+  }) {
+    _methodChannel = MethodChannel('flutter_vap_controller_$viewId');
+    _methodChannel.setMethodCallHandler(_onMethodCallHandler);
   }
 
-  void _onEvent(dynamic event) {
-    // Handle the event
-    print('Received event: $event');
-  }
+  Completer<void>? playCompleter;
 
-  void _onError(Object error) {
-    // Handle the error
-    print('Error receiving event: $error');
-  }
 
   /// return: play error:       {"status": "failure", "errorMsg": ""}
   ///         play complete:    {"status": "complete"}
-  static Future<Map<dynamic, dynamic>?> playPath(String path) async {
-    return _methodChannel.invokeMethod('playPath', {"path": path});
+  Future<void> playPath(String path,
+      {List<FetchResourceModel> fetchResources = const []}) async {
+    try {
+      playCompleter = Completer<void>();
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      await _methodChannel.invokeMethod('playPath', {"path": path});
+      await setFetchResources(fetchResources);
+      return playCompleter!.future.timeout(const Duration(seconds: 20),
+          onTimeout: () {
+            playCompleter?.completeError(
+                TimeoutException("wait play complete timeout"));
+          });
+    } catch (e, s) {
+      playCompleter?.completeError(e, s);
+    }
   }
 
-  static Future<Map<dynamic, dynamic>?> playAsset(String asset) {
-    return _methodChannel.invokeMethod('playAsset', {"asset": asset});
+  Future<void> playAsset(String asset,
+      {List<FetchResourceModel> fetchResources = const []}) async {
+    try {
+      playCompleter = Completer<void>();
+      await _methodChannel.invokeMethod('playAsset', {"asset": asset});
+      await setFetchResources(fetchResources);
+      return playCompleter!.future.timeout(const Duration(seconds: 20),
+          onTimeout: () {
+            playCompleter?.completeError(
+                TimeoutException("wait play complete timeout"));
+          });
+    } catch (e, s) {
+      playCompleter?.completeError(e, s);
+    }
   }
 
-  static stop() {
+  stop() {
     _methodChannel.invokeMethod('stop');
   }
+
+  Future setFetchResources(List<FetchResourceModel> resources) {
+    return _methodChannel.invokeMethod(
+        'setFetchResource',
+        jsonEncode(resources.map((e) => e.toMap()).toList()));
+  }
+
+  void dispose() {
+    _methodChannel.setMethodCallHandler(null);
+  }
+
+  Future _onMethodCallHandler(MethodCall call) async {
+    onEvent?.call(call.method);
+    switch (call.method) {
+      case "onComplete":
+        playCompleter?.complete();
+        break;
+      case "onFailed":
+        playCompleter?.completeError(call.arguments);
+        break;
+    }
+  }
+}
+
+class FetchResourceModel {
+  /// vap资源文件中预设的tag
+  final String tag;
+
+  /// 图片本地路径或者文本字符串
+  final String resource;
+
+  FetchResourceModel({required this.tag, required this.resource});
+
+  Map<String, String> toMap() =>
+      {
+        'tag': tag,
+        'resource': resource,
+      };
+
 }

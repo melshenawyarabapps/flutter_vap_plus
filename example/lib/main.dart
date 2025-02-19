@@ -21,6 +21,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   List<String> downloadPathList = [];
   bool isDownload = false;
+  VapController? vapController;
 
   @override
   void initState() {
@@ -44,8 +45,8 @@ class _MyAppState extends State<MyApp> {
             width: double.infinity,
             height: double.infinity,
             decoration: BoxDecoration(
-              color: Color.fromARGB(255, 140, 41, 43),
-              image: DecorationImage(image: AssetImage("static/bg.jpeg")),
+              color: Color.fromARGB(255, 100, 241, 243),
+              // image: DecorationImage(image: AssetImage("static/bg.jpeg")),
             ),
             child: Stack(
               alignment: Alignment.bottomCenter,
@@ -77,8 +78,17 @@ class _MyAppState extends State<MyApp> {
                     ),
                     CupertinoButton(
                       color: Colors.purple,
+                      child: Text("asset2 play"),
+                      onPressed: () => _playAsset("static/video.mp4",fetchResources: [
+                        // FetchResourceModel(tag: 'tag', resource: 'https://momooline-dev.oss-accelerate.aliyuncs.com/qibla/avatar/fe3de49a-1173-45cf-af7a-86d713073c7f.jpg'),
+                        FetchResourceModel(tag: 'key_ride_banner', resource: '测试用户1'),
+
+                      ]),
+                    ),
+                    CupertinoButton(
+                      color: Colors.purple,
                       child: Text("stop play"),
-                      onPressed: () => VapController.stop(),
+                      onPressed: () => vapController?.stop(),
                     ),
                     CupertinoButton(
                       color: Colors.purple,
@@ -92,11 +102,20 @@ class _MyAppState extends State<MyApp> {
                     ),
                   ],
                 ),
-                IgnorePointer(
+                Positioned.fill(
+                    child: IgnorePointer(
                   // VapView可以通过外层包Container(),设置宽高来限制弹出视频的宽高
                   // VapView can set the width and height through the outer package Container() to limit the width and height of the pop-up video
-                  child: VapView(),
-                ),
+                  child: VapView(
+                    // fit: VapScaleFit.FIT_XY,
+                    onEvent: (event) {
+                      debugPrint('VapView event:${event}');
+                    },
+                    onControllerCreated: (controller) {
+                      vapController = controller;
+                    },
+                  ),
+                )),
               ],
             ),
           ),
@@ -117,35 +136,25 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<Map<dynamic, dynamic>?> _playFile(String path) async {
-    if (path == null) {
-      return null;
-    }
-    var res = await VapController.playPath(path);
-    if (res!["status"] == "failure") {
-      showToast(res["errorMsg"]);
-    }
-    return res;
+  Future<void> _playFile(String path) async {
+    await vapController?.playPath(path);
   }
 
-  Future<Map<dynamic, dynamic>?> _playAsset(String asset) async {
-    if (asset == null) {
-      return null;
-    }
-    var res = await VapController.playAsset(asset);
-    if (res!["status"] == "failure") {
-      showToast(res["errorMsg"]);
-    }
-    return res;
+  Future<void> _playAsset(String asset, {List<FetchResourceModel> fetchResources = const []}) async {
+    await vapController?.playAsset(asset,fetchResources:fetchResources);
   }
 
   _queuePlay() async {
     // 模拟多个地方同时调用播放,使得队列执行播放。
     // Simultaneously call playback in multiple places, making the queue perform playback.
     QueueUtil.get("vapQueue")
-        ?.addTask(() => VapController.playPath(downloadPathList[0]));
+        ?.addTask(() => vapController?.playPath(downloadPathList[0]));
     QueueUtil.get("vapQueue")
-        ?.addTask(() => VapController.playPath(downloadPathList[1]));
+        ?.addTask(() => vapController?.playPath(downloadPathList[1]));
+    QueueUtil.get("vapQueue")
+        ?.addTask(() => vapController?.playPath(downloadPathList[0]));
+    QueueUtil.get("vapQueue")
+        ?.addTask(() => vapController?.playPath(downloadPathList[1]));
   }
 
   _cancelQueuePlay() {
