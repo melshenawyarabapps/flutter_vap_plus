@@ -80,9 +80,8 @@ class _MyAppState extends State<MyApp> {
                       color: Colors.purple,
                       child: Text("asset2 play"),
                       onPressed: () => _playAsset("static/video.mp4",fetchResources: [
-                        // FetchResourceModel(tag: 'tag', resource: 'https://momooline-dev.oss-accelerate.aliyuncs.com/qibla/avatar/fe3de49a-1173-45cf-af7a-86d713073c7f.jpg'),
+                        // FetchResourceModel(tag: 'tag', resource: '1.png'),
                         FetchResourceModel(tag: 'key_ride_banner', resource: '测试用户1'),
-
                       ]),
                     ),
                     CupertinoButton(
@@ -108,7 +107,7 @@ class _MyAppState extends State<MyApp> {
                   // VapView can set the width and height through the outer package Container() to limit the width and height of the pop-up video
                   child: VapView(
                     // fit: VapScaleFit.FIT_XY,
-                    onEvent: (event) {
+                    onEvent: (event,args) {
                       debugPrint('VapView event:${event}');
                     },
                     onControllerCreated: (controller) {
@@ -147,14 +146,9 @@ class _MyAppState extends State<MyApp> {
   _queuePlay() async {
     // 模拟多个地方同时调用播放,使得队列执行播放。
     // Simultaneously call playback in multiple places, making the queue perform playback.
-    QueueUtil.get("vapQueue")
-        ?.addTask(() => vapController?.playPath(downloadPathList[0]));
-    QueueUtil.get("vapQueue")
-        ?.addTask(() => vapController?.playPath(downloadPathList[1]));
-    QueueUtil.get("vapQueue")
-        ?.addTask(() => vapController?.playPath(downloadPathList[0]));
-    QueueUtil.get("vapQueue")
-        ?.addTask(() => vapController?.playPath(downloadPathList[1]));
+    await vapController?.playPath(downloadPathList[0]);
+    await vapController?.playPath(downloadPathList[1]);
+    await _playAsset("static/demo.mp4");
   }
 
   _cancelQueuePlay() {

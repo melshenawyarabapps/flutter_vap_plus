@@ -7,7 +7,7 @@ import 'vap_view.dart';
 class VapViewForIos extends StatelessWidget {
   final void Function(VapController controller) onControllerCreated;
   final VapScaleFit fit;
-  final void Function(dynamic event)? onEvent;
+  final void Function(dynamic event,dynamic arguments)? onEvent;
 
   VapViewForIos(
       {required this.onControllerCreated,

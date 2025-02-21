@@ -44,6 +44,10 @@ internal class NativeVapView(
     private var myScope: CoroutineScope? =
         CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate) // 或者 Dispatchers.Default/I // O
 
+    init {
+        channel.setMethodCallHandler(this)
+    }
+
     override fun onFlutterViewAttached(flutterView: View) {
         super.onFlutterViewAttached(flutterView)
 
@@ -114,7 +118,6 @@ internal class NativeVapView(
             }
         })
 
-        channel.setMethodCallHandler(this)
     }
 
     override fun getView(): View {
@@ -132,6 +135,7 @@ internal class NativeVapView(
                 if (path != null) {
                     vapView.startPlay(File(path))
                     result.success(null)
+
                 } else {
                     result.error("INVALID_ARGUMENT", "Path is null", null)
                 }
@@ -186,7 +190,6 @@ internal class FetchResources(
         }?.let {
             result(BitmapFactory.decodeFile(it.resource))
         } ?: result(null)
-
     }
 
     override fun fetchText(resource: Resource, result: (String?) -> Unit) {

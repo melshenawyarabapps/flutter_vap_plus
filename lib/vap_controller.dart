@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 class VapController {
   late final MethodChannel _methodChannel;
   final int viewId;
-  final void Function(dynamic event)? onEvent;
+  final void Function(dynamic event,dynamic arguments)? onEvent;
 
   VapController({
     required this.viewId,
@@ -26,7 +26,6 @@ class VapController {
     try {
       playCompleter = Completer<void>();
       await Future.delayed(const Duration(milliseconds: 50));
-
       await _methodChannel.invokeMethod('playPath', {"path": path});
       await setFetchResources(fetchResources);
       return playCompleter!.future.timeout(const Duration(seconds: 20),
@@ -70,7 +69,7 @@ class VapController {
   }
 
   Future _onMethodCallHandler(MethodCall call) async {
-    onEvent?.call(call.method);
+    onEvent?.call(call.method,call.arguments);
     switch (call.method) {
       case "onComplete":
         playCompleter?.complete();
