@@ -1,6 +1,7 @@
 #import "NativeVapView.h"
 #import "UIView+VAP.h"
 #import "QGVAPWrapView.h"
+#import "FetchResourceModel.h"
 #import <Flutter/Flutter.h>
 
 @interface NativeVapView : NSObject <FlutterPlatformView, VAPWrapViewDelegate>
@@ -40,30 +41,52 @@
     QGVAPWrapView *_wrapView;
     BOOL playStatus;
     FlutterMethodChannel *_methodChannel;
-    FlutterEventChannel *_eventChannel;
-    FlutterEventSink _eventSink;
+    NSArray<FetchResourceModel *> *_fetchResources;
+    id _args;
 }
 - (instancetype)initWithFrame:(CGRect)frame
                viewIdentifier:(int64_t)viewId
                     arguments:(id _Nullable)args
               binaryMessenger:(NSObject<FlutterBinaryMessenger> *)messenger {
     self = [super init];
+    _args = args;
     if (self) {
         playStatus = NO;
         _view = [[UIView alloc] initWithFrame:frame];
+        
 
+        
+        //        [_view addvi];
+
+        NSString *scaleType = args[@"scaleType"];
+        if([scaleType isEqualToString:@"FIT_CENTER"]){
+//            [_wrapView setContentMode:QGVAPWrapViewContentModeAspectFit];
+            _wrapView.contentMode = QGVAPWrapViewContentModeAspectFit;
+        }else if([scaleType isEqualToString:@"FIT_XY"]){
+//            [_wrapView setContentMode:QGVAPWrapViewContentModeAspectFill];
+            _wrapView.contentMode = QGVAPWrapViewContentModeAspectFill;
+
+        }else{
+//            [_wrapView setContentMode:QGVAPWrapViewContentModeScaleToFill];
+            _wrapView.contentMode = QGVAPWrapViewContentModeScaleToFill;
+        }
+//        _wrapView.contentMode = QGVAPWrapViewContentModeAspectFit;
+//        _wrapView.autoDestoryAfterFinish = YES;
+
+//        _wrapView.center = _view.center;
+//        _wrapView.hwd_renderByOpenGL = YES;
+//        [_view addSubview:_wrapView];
         // Initialize MethodChannel with a static name
-        NSString *methodChannelName = @"flutter_vap_controller";
-        _methodChannel = [FlutterMethodChannel methodChannelWithName:methodChannelName binaryMessenger:messenger];
-        [_methodChannel setMethodCallHandler:^(FlutterMethodCall *call, FlutterResult result) {
-            [self handleMethodCall:call result:result];
-        }];
+        NSString *methodChannelName = [NSString stringWithFormat: @"flutter_vap_controller_%lld" ,viewId];
 
-        // Initialize EventChannel
-        NSString *eventChannelName = [NSString stringWithFormat:@"flutter_vap_event_channel_%lld", viewId];
-        _eventChannel = [FlutterEventChannel eventChannelWithName:eventChannelName binaryMessenger:messenger];
+        _methodChannel = [FlutterMethodChannel methodChannelWithName:methodChannelName binaryMessenger:messenger];
         __weak typeof(self) weakSelf = self;
-        [_eventChannel setStreamHandler:self];
+        [_methodChannel setMethodCallHandler:^(FlutterMethodCall *call, FlutterResult result) {
+            [weakSelf handleMethodCall:call result:result];
+        }];
+//        [_methodChannel invokeMethod:scaleType arguments:scaleType];
+
+        
     }
     return self;
 }
@@ -98,17 +121,7 @@
     return _view;
 }
 
-#pragma mark - FlutterStreamHandler
 
-- (FlutterError * _Nullable)onListenWithArguments:(id _Nullable)arguments eventSink:(FlutterEventSink)events {
-    _eventSink = events;
-    return nil;
-}
-
-- (FlutterError * _Nullable)onCancelWithArguments:(id _Nullable)arguments {
-    _eventSink = nil;
-    return nil;
-}
 
 #pragma mark - Method Call Handling
 
@@ -125,7 +138,15 @@
     } else if ([@"playAsset" isEqualToString:call.method]) {
         NSString *asset = call.arguments[@"asset"];
         if (asset) {
-            NSString *assetPath = [[NSBundle mainBundle] pathForResource:asset ofType:nil];
+//            NSString *assetPath = [[NSBundle mainBundle] pathForResource:asset ofType:nil];
+            NSString *flutterAssetsPath = [[NSBundle mainBundle] pathForResource:@"flutter_assets" ofType:nil];
+            
+                NSString *assetPath = [flutterAssetsPath stringByAppendingPathComponent:asset];
+            
+                NSLog(@"Asset path: %@", assetPath);
+            
+            
+            
             if (assetPath) {
                 [self playByPath:assetPath withResult:result];
             } else {
@@ -141,9 +162,15 @@
     } else if ([@"stop" isEqualToString:call.method]) {
         [self stopPlayback];
         result(nil);
-    } else {
+    } else if ([@"fetchResource" isEqualToString:call.method]){
+        NSString *rawJson = (NSString *) call.arguments;
+        _fetchResources = [FetchResourceModel fromRawJsonArray:rawJson];
+        
+    }else {
         result(FlutterMethodNotImplemented);
     }
+    
+    
 }
 
 #pragma mark - Playback Control
@@ -158,16 +185,18 @@
 
     playStatus = YES;
     _wrapView = [[QGVAPWrapView alloc] initWithFrame:_view.bounds];
+    
     _wrapView.center = _view.center;
     _wrapView.contentMode = QGVAPWrapViewContentModeAspectFit;
     _wrapView.autoDestoryAfterFinish = YES;
+    
     [_view addSubview:_wrapView];
     [_wrapView vapWrapView_playHWDMP4:path repeatCount:0 delegate:self];
+//    [_wrapView playHWDMp4:path repeatCount:0 delegate:self];
 
+//    [_wrapView playHWDMP4:path repeatCount:0 delegate:self];
     // Optionally, you can notify Flutter that playback has started
-    if (_eventSink) {
-        _eventSink(@{@"status": @"started"});
-    }
+    [_methodChannel invokeMethod:@"onStart" arguments:@{@"status" : @"start"}];
 }
 
 - (void)stopPlayback {
@@ -177,10 +206,6 @@
     }
     playStatus = NO;
 
-    // Notify Flutter that playback has stopped
-    if (_eventSink) {
-        _eventSink(@{@"status": @"stopped"});
-    }
 }
 
 #pragma mark - VAPWrapViewDelegate
@@ -189,37 +214,51 @@
     playStatus = YES;
 
     // Notify Flutter that playback has started
-    if (_eventSink) {
-        _eventSink(@{@"status": @"started"});
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self->_methodChannel invokeMethod:@"onStart" arguments:@{@"status" : @"start"}];
+    });
+
 }
 
 - (void)vapWrap_viewDidFailPlayMP4:(NSError *)error {
     playStatus = NO;
+    dispatch_async(dispatch_get_main_queue(), ^{
 
-    if (_eventSink) {
-        _eventSink(@{
-                           @"status": @"failure",
-                           @"errorMsg": error.localizedDescription ?: @"Unknown error"
-                   });
-    }
+    [self->_methodChannel invokeMethod:@"onFailed" arguments:@{
+        @"status": @"failure",
+        @"errorMsg": error.localizedDescription ?: @"Unknown error"
+}];
+    });
+
 }
 
 - (void)vapWrap_viewDidStopPlayMP4:(NSInteger)lastFrameIndex view:(VAPView *)container {
     playStatus = NO;
-
-    // Notify Flutter that playback has stopped
-    if (_eventSink) {
-        _eventSink(@{@"status": @"stopped"});
-    }
 }
 
 - (void)vapWrap_viewDidFinishPlayMP4:(NSInteger)totalFrameCount view:(VAPView *)container {
     playStatus = NO;
+    dispatch_async(dispatch_get_main_queue(), ^{
 
-    if (_eventSink) {
-        _eventSink(@{@"status": @"complete"});
+    [self->_methodChannel invokeMethod:@"onComplete" arguments:@{@"status" : @"complete"}];
+    });
+
+}
+
+- (NSString *)vapWrapview_contentForVapTag:(NSString *)tag resource:(QGVAPSourceInfo *)info{
+    for(FetchResourceModel *model in _fetchResources){
+        if([model.tag isEqualToString:tag]){
+            return model.resource;
+        }
     }
+    return nil;
+}
+
+- (void)vapWrapView_loadVapImageWithURL:(NSString *)urlStr context:(NSDictionary *)context completion:(VAPImageCompletionBlock)completionBlock{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIImage *image = [UIImage imageWithContentsOfFile:urlStr];
+        completionBlock(image,nil,urlStr);
+    });
 }
 
 @end

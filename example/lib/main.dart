@@ -106,7 +106,7 @@ class _MyAppState extends State<MyApp> {
                   // VapView可以通过外层包Container(),设置宽高来限制弹出视频的宽高
                   // VapView can set the width and height through the outer package Container() to limit the width and height of the pop-up video
                   child: VapView(
-                    // fit: VapScaleFit.FIT_XY,
+                    fit: VapScaleFit.FIT_XY,
                     onEvent: (event,args) {
                       debugPrint('VapView event:${event}');
                     },
