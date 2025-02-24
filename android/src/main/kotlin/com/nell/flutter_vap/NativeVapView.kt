@@ -129,6 +129,7 @@ internal class NativeVapView(
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+        Log.d("TAG", "onMethodCall: ${call.method}")
         when (call.method) {
             "playPath" -> {
                 val path = call.argument<String>("path")
@@ -161,7 +162,7 @@ internal class NativeVapView(
                 val gson = Gson()
                 val type = object : TypeToken<List<FetchResourceModel>>() {}.type
                 val list: List<FetchResourceModel> = gson.fromJson(rawJson, type)
-
+//                vapView.seton
                 vapView.setFetchResource(
                     fetchResource = FetchResources(
                         resources = list
@@ -184,10 +185,11 @@ internal class FetchResources(
 
 
     override fun fetchImage(resource: Resource, result: (Bitmap?) -> Unit) {
-        Log.d("TAG", "fetchResource: fetchImage ${resource.tag}")
+        Log.d("TAG", "fetchResource: fetchImage ${resource.tag} -- $resources")
         resources.firstOrNull {
             it.tag == resource.tag
         }?.let {
+            Log.d("TAG", "fetchImage: result ${it.resource}")
             result(BitmapFactory.decodeFile(it.resource))
         } ?: result(null)
     }
@@ -215,4 +217,13 @@ internal class FetchResourceModel(
     val tag: String,
     /// 图片本地路径或者文本字符串
     val resource: String,
-)
+
+
+) {
+    override fun toString(): String {
+        return mapOf(
+            "tag" to tag,
+            "resource" to resource
+        ).toString()
+    }
+}

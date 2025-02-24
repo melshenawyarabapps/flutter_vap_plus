@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 
 import 'package:flutter_vap/flutter_vap.dart';
 import 'package:oktoast/oktoast.dart';
@@ -79,10 +80,54 @@ class _MyAppState extends State<MyApp> {
                     CupertinoButton(
                       color: Colors.purple,
                       child: Text("asset2 play"),
-                      onPressed: () => _playAsset("static/video.mp4",fetchResources: [
+                      onPressed: () =>
+                          _playAsset("static/video.mp4", fetchResources: [
                         // FetchResourceModel(tag: 'tag', resource: '1.png'),
-                        FetchResourceModel(tag: 'key_ride_banner', resource: '测试用户1'),
+                        FetchResourceModel(
+                            tag: 'key_ride_banner', resource: '测试用户1'),
                       ]),
+                    ),
+                    Builder(
+                      builder: (context) {
+                        return CupertinoButton(
+                          color: Colors.purple,
+                          child: Text("dialog play"),
+                          onPressed: () {
+                            showDialog<void>(
+                              context: context,
+                              barrierDismissible: true,
+                              // false = user must tap button, true = tap outside dialog
+                              builder: (BuildContext dialogContext) {
+                                return AlertDialog(
+                                  backgroundColor: Colors.black45,
+                                  content: GestureDetector(
+                                    onTap: (){
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: SizedBox(
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      child: IgnorePointer(
+                                        child:
+                                        VapView(onControllerCreated: (controller) async{
+                                          var avatarFile = await _getImageFileFromAssets('static/bg.jpeg');
+                                          controller.playAsset('static/video.mp4',
+                                              fetchResources: [
+                                                FetchResourceModel(tag: 'key_ride_avatar', resource: avatarFile.path),
+                                                FetchResourceModel(
+                                                    tag: 'key_ride_banner',
+                                                    resource: '测试用户1'),
+                                              ]);
+                                        }),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        );
+                      }
                     ),
                     CupertinoButton(
                       color: Colors.purple,
@@ -107,7 +152,7 @@ class _MyAppState extends State<MyApp> {
                   // VapView can set the width and height through the outer package Container() to limit the width and height of the pop-up video
                   child: VapView(
                     fit: VapScaleFit.FIT_XY,
-                    onEvent: (event,args) {
+                    onEvent: (event, args) {
                       debugPrint('VapView event:${event}');
                     },
                     onControllerCreated: (controller) {
@@ -123,6 +168,22 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  Future<File> _getImageFileFromAssets(String path) async {
+    Directory tempDir = await getTemporaryDirectory();
+    String tempPath = tempDir.path;
+    var filePath = "$tempPath/$path";
+    var file = File(filePath);
+    if (file.existsSync()) {
+      return file;
+    } else {
+      final byteData = await rootBundle.load(path);
+      final buffer = byteData.buffer;
+      await file.create(recursive: true);
+      return file
+          .writeAsBytes(buffer.asUint8List(byteData.offsetInBytes,
+          byteData.lengthInBytes));
+    }
+  }
   _download() async {
     await Dio().download(
         "https://res.cloudinary.com/dkmchpua1/video/upload/v1737623468/zta2wxsuokcskw0bhar7.mp4",
@@ -139,8 +200,9 @@ class _MyAppState extends State<MyApp> {
     await vapController?.playPath(path);
   }
 
-  Future<void> _playAsset(String asset, {List<FetchResourceModel> fetchResources = const []}) async {
-    await vapController?.playAsset(asset,fetchResources:fetchResources);
+  Future<void> _playAsset(String asset,
+      {List<FetchResourceModel> fetchResources = const []}) async {
+    await vapController?.playAsset(asset, fetchResources: fetchResources);
   }
 
   _queuePlay() async {
