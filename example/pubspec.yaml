@@ -6,7 +6,8 @@ description: Demonstrates how to use the flutter_vap plugin.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 environment:
-  sdk: ^3.5.3
+  sdk: '>=3.4.3 <4.0.0'
+  flutter: '>=3.3.0'
 
 dependencies:
   flutter:
@@ -75,5 +76,4 @@ flutter:
 
   assets:
     - static/demo.mp4
-    - static/video.mp4
     - static/bg.jpeg
