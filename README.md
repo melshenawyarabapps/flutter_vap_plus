@@ -25,7 +25,7 @@ VAP（Video Animation Player）is developed by Penguin E-sports and is used to p
 
 ### Setup
 ```
-flutter_vap: ${last_version}
+flutter_vap_plus: ${last_version}
 ```
 
 ### How to use

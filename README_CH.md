@@ -23,7 +23,7 @@ VAP（Video Animation Player）是企鹅电竞开发，用于播放酷炫动画�
 
 ### 安装
 ```
-flutter_vap: ${last_version}
+flutter_vap_plus: ${last_version}
 ```
 
 ### 使用
