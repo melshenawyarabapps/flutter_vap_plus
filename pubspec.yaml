@@ -1,4 +1,4 @@
-name: flutter_vap
+name: flutter_vap_plus
 description: Is a native plugin for playing alpha video animation
 version: 1.2.0
 author: qq326646683<326646683@qq.com>,justyouzxy<1120540016@qq.com>,Astra1427<1427917847@qq.com>
@@ -27,7 +27,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.nell.flutter_vap
+        package: com.nell.flutter_vap_plus
         pluginClass: FlutterVapPlugin
       ios:
         pluginClass: FlutterVapPlugin

@@ -1,5 +1,10 @@
 [中文文档](./README_CH.md)
 
+This library is an independent branch from [flutter_vap](https://pub.dev/packages/flutter_vap), and the original library is no longer maintained.
+
+Changes include: adding support for fusion animation, upgrading the flutter version, and merging existing PRs.
+
+
 ### Backdrop
 Transparent video animation is currently one of the more popular implementations of animation. Major manufacturers have also open sourced their own frameworks. In the end, we chose [Tencent vap](https://github.com/Tencent/vap), which supports Android, IOS, and Web, and provides natural convenience for us to encapsulate flutter_vap. Provides a tool to generate a video with an alpha channel from a frame picture, which is simply awesome.
 
@@ -25,44 +30,61 @@ flutter_vap: ${last_version}
 
 ### How to use
 ```dart
-import 'package:flutter_vap/flutter_vap.dart';
+import 'package:flutter_vap_plus/flutter_vap_plus.dart';
+
+late VapController vapController;
 
 IgnorePointer(
   // VapView can set the width and height through the outer package Container() to limit the width and height of the pop-up video
-  child: VapView(),
+  child: VapView(
+    fit: VapScaleFit.FIT_XY,
+    onEvent: (event, args) {
+      debugPrint('VapView event:${event}');
+    },
+    onControllerCreated: (controller) {
+      vapController = controller;
+    },
+  ),
 ),
 ```
 
 1. Play local video
 ```dart
-  import 'package:flutter_vap/flutter_vap.dart';
+  import 'package:flutter_vap_plus/flutter_vap_plus.dart';
 
-  /// return: play error:       {"status": "failure", "errorMsg": ""}
-  ///         play complete:    {"status": "complete"}
-  Future<Map<dynamic, dynamic>> _playFile(String path) async {
+  
+  Future<void> _playFile(String path) async {
     if (path == null) {
       return null;
     }
-    var res = await VapController.playPath(path);
-    if (res["status"] == "failure") {
-      showToast(res["errorMsg"]);
-    }
-    return res;
+    await vapController.playPath(path);
   }
 ```
 
 2. Play asset video
 ```dart
-  Future<Map<dynamic, dynamic>> _playAsset(String asset) async {
+  Future<void> _playAsset(String asset) async {
     if (asset == null) {
       return null;
     }
-    var res = await VapController.playAsset(asset);
-    if (res["status"] == "failure") {
-      showToast(res["errorMsg"]);
-    }
-    return res;
+    await vapController.playAsset(asset);
   }
+```
+
+3. Set fusion animation during playback
+```dart
+import 'package:flutter_vap_plus/flutter_vap_plus.dart';
+
+Future<void> _playFile(String path) async {
+  if (path == null) {
+    return null;
+  }
+  await vapController.playPath(path, fetchResources: [
+    FetchResourceModel(tag: 'tag', resource: '1.png'),
+    FetchResourceModel(
+        tag: 'text', resource: 'test user 1'),
+  ]);
+}
 ```
 
 3. Stop play
@@ -77,6 +99,12 @@ IgnorePointer(
     QueueUtil.get("vapQueue").addTask(() => VapController.playPath(downloadPathList[0]));
     QueueUtil.get("vapQueue").addTask(() => VapController.playPath(downloadPathList[1]));
   }
+
+  _queuePlay2()async{
+    await vapController?.playPath(downloadPathList[0]);
+    await vapController?.playPath(downloadPathList[1]);
+    await _playAsset("static/demo.mp4");
+  }
 ```
 
 5. Cancel queue playback
@@ -86,6 +114,6 @@ IgnorePointer(
 
 Example
 
-[github](https://github.com/qq326646683/flutter_vap/blob/main/example/lib/main.dart)
+[github](https://github.com/Astra1427/flutter_vap_plus/blob/main/example/lib/main.dart)
 
 

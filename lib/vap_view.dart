@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
-import 'package:flutter_vap/flutter_vap.dart';
-import 'package:flutter_vap/vap_view_for_android.dart';
-import 'package:flutter_vap/vap_view_for_ios.dart';
+import 'package:flutter_vap_plus/flutter_vap_plus.dart';
+import 'package:flutter_vap_plus/vap_view_for_android.dart';
+import 'package:flutter_vap_plus/vap_view_for_ios.dart';
 
 class VapView extends StatefulWidget {
   final void Function(VapController controller) onControllerCreated;

@@ -1,6 +1,4 @@
-package com.nell.flutter_vap
-
-import androidx.annotation.NonNull
+package com.nell.flutter_vap_plus
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 

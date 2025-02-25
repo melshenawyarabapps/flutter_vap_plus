@@ -1,4 +1,4 @@
-package com.nell.flutter_vap
+package com.nell.flutter_vap_plus
 
 import android.content.Context
 import io.flutter.plugin.common.BinaryMessenger

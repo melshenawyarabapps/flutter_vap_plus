@@ -6,7 +6,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 
-import 'package:flutter_vap/flutter_vap.dart';
+import 'package:flutter_vap_plus/flutter_vap_plus.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -33,7 +33,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> initDownloadPath() async {
     Directory appDocDir = await getApplicationDocumentsDirectory();
     String rootPath = appDocDir.path;
-    downloadPathList = ["$rootPath/vap_demo1.mp4", "$rootPath/vap_demo2.mp4"];
+    downloadPathList = ["$rootPath/vap_demo1.mp4", "$rootPath/vap_demo2.mp4","$rootPath.vap_demo3.mp4"];
     print("downloadPathList:$downloadPathList");
   }
 
@@ -71,6 +71,19 @@ class _MyAppState extends State<MyApp> {
                       color: Colors.purple,
                       child: Text("File2 play"),
                       onPressed: () => _playFile(downloadPathList[1]),
+                    ),
+                    CupertinoButton(
+                      color: Colors.purple,
+                      child: Text("File3 play"),
+                      onPressed: () async{
+                        var avatarFile = await _getImageFileFromAssets('static/bg.jpeg');
+                        _playFile(downloadPathList[2],fetchResources: [
+                          FetchResourceModel(tag: 'key_ride_avatar', resource: avatarFile.path),
+                          FetchResourceModel(
+                              tag: 'key_ride_banner',
+                              resource: '测试用户1'),
+                        ]);
+                      },
                     ),
                     CupertinoButton(
                       color: Colors.purple,
@@ -191,13 +204,20 @@ class _MyAppState extends State<MyApp> {
     await Dio().download(
         "https://res.cloudinary.com/dkmchpua1/video/upload/v1737624783/vcg9co6yyfqsadgety1n.mp4",
         downloadPathList[1]);
+    await Dio().download(
+        "https://dev.file.momooline.com/svgasource/manager-1b2f9f59-faca-48b2-82ac-412caf63f0b2.mp4",
+        downloadPathList[2]);
     setState(() {
       isDownload = true;
     });
   }
 
-  Future<void> _playFile(String path) async {
-    await vapController?.playPath(path);
+  Future<void> _playFile(String path,{List<FetchResourceModel> fetchResources = const []}) async {
+    try {
+      await vapController?.playPath(path,fetchResources: fetchResources);
+    } catch (e, s) {
+      print(s);
+    }
   }
 
   Future<void> _playAsset(String asset,

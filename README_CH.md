@@ -1,3 +1,9 @@
+
+该库是从[flutter_vap](https://pub.dev/packages/flutter_vap)独立的分支，原库已经没人维护。
+
+改动包括：新增支持融合动画，升级flutter版本，合并现有的PR。
+
+---
 ### 背景
 透明视频动画是目前比较流行的实现动画的一种, 大厂也相继开源自己的框架，最终我们选中[腾讯vap](https://github.com/Tencent/vap)，它支持了Android、IOS、Web，为我们封装flutter_vap提供了天然的便利，并且它提供了将帧图片生成带alpha通道视频的工具，这简直太赞了。
 
@@ -22,64 +28,87 @@ flutter_vap: ${last_version}
 
 ### 使用
 ```dart
-import 'package:flutter_vap/flutter_vap.dart';
+import 'package:flutter_vap_plus/flutter_vap_plus.dart';
+
+late VapController vapController;
 
 IgnorePointer(
   // VapView可以通过外层包Container(),设置宽高来限制弹出视频的宽高
-  child: VapView(),
+  child: VapView(
+    fit: VapScaleFit.FIT_XY,
+    onEvent: (event, args) {
+      debugPrint('VapView event:${event}');
+    },
+    onControllerCreated: (controller) {
+      vapController = controller;
+    },
+  ),
 ),
 ```
 
 1. 播放本地视频
 ```dart
-  import 'package:flutter_vap/flutter_vap.dart';
+  import 'package:flutter_vap_plus/flutter_vap_plus.dart';
 
-  /// return: play error:       {"status": "failure", "errorMsg": ""}
-  ///         play complete:    {"status": "complete"}
-  Future<Map<dynamic, dynamic>> _playFile(String path) async {
+  
+  Future<void> _playFile(String path) async {
     if (path == null) {
       return null;
     }
-    var res = await VapController.playPath(path);
-    if (res["status"] == "failure") {
-      showToast(res["errorMsg"]);
-    }
-    return res;
+    await vapController.playPath(path);
   }
 ```
 
 2. 播放asset视频
 ```dart
-  Future<Map<dynamic, dynamic>> _playAsset(String asset) async {
+  Future<void> _playAsset(String asset) async {
     if (asset == null) {
       return null;
     }
-    var res = await VapController.playAsset(asset);
-    if (res["status"] == "failure") {
-      showToast(res["errorMsg"]);
-    }
-    return res;
+    await vapController.playAsset(asset);
   }
 ```
 
-3. 停止播放
+3. 播放时设置融合动画
 ```dart
-  VapController.stop()
+import 'package:flutter_vap_plus/flutter_vap_plus.dart';
+
+Future<void> _playFile(String path) async {
+  if (path == null) {
+    return null;
+  }
+  await vapController.playPath(path, fetchResources: [
+    FetchResourceModel(tag: 'tag', resource: '1.png'),
+    FetchResourceModel(
+        tag: 'text', resource: '测试用户1'),
+  ]);
+}
 ```
 
-4. 队列播放
+4. 停止播放
+```dart
+  vapController.stop()
+```
+
+5. 队列播放
 ```dart
   _queuePlay() async {
     // 模拟多个地方同时调用播放,使得队列执行播放。
-    QueueUtil.get("vapQueue").addTask(() => VapController.playPath(downloadPathList[0]));
-    QueueUtil.get("vapQueue").addTask(() => VapController.playPath(downloadPathList[1]));
+    QueueUtil.get("vapQueue").addTask(() => vapController.playPath(downloadPathList[0]));
+    QueueUtil.get("vapQueue").addTask(() => vapController.playPath(downloadPathList[1]));
+  }
+  
+  _queuePlay2()async{
+    await vapController?.playPath(downloadPathList[0]);
+    await vapController?.playPath(downloadPathList[1]);
+    await _playAsset("static/demo.mp4");
   }
 ```
 
-5. 取消队列播放
+6. 取消队列播放
 ```dart
   QueueUtil.get("vapQueue").cancelTask();
 ```
 
 ### 例子
-[github](https://github.com/qq326646683/flutter_vap/blob/main/example/lib/main.dart)
+[github](https://github.com/Astra1427/flutter_vap_plus/blob/main/example/lib/main.dart)

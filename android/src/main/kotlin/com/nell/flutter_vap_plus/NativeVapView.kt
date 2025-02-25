@@ -1,13 +1,10 @@
-package com.nell.flutter_vap
+package com.nell.flutter_vap_plus
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.os.Environment
 import android.util.Log
 import android.view.View
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.tencent.qgame.animplayer.AnimConfig
 import com.tencent.qgame.animplayer.AnimView
 import com.tencent.qgame.animplayer.inter.IAnimListener
@@ -15,16 +12,14 @@ import com.tencent.qgame.animplayer.util.ScaleType
 import com.tencent.qgame.animplayer.inter.IFetchResource
 import com.tencent.qgame.animplayer.mix.Resource
 import io.flutter.plugin.common.BinaryMessenger
-import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import java.io.File
 
 internal class NativeVapView(
@@ -159,10 +154,8 @@ internal class NativeVapView(
 
             "setFetchResource" -> {
                 val rawJson = call.arguments.toString()
-                val gson = Gson()
-                val type = object : TypeToken<List<FetchResourceModel>>() {}.type
-                val list: List<FetchResourceModel> = gson.fromJson(rawJson, type)
-//                vapView.seton
+                val list: List<FetchResourceModel> = parseJsonToFetchResourceModelList(rawJson)
+
                 vapView.setFetchResource(
                     fetchResource = FetchResources(
                         resources = list
@@ -175,6 +168,27 @@ internal class NativeVapView(
                 result.notImplemented()
             }
         }
+    }
+
+
+    private fun parseJsonToFetchResourceModelList(rawJson: String): List<FetchResourceModel> {
+        val list = mutableListOf<FetchResourceModel>()
+        try {
+            val jsonArray = JSONArray(rawJson)
+            for (i in 0 until jsonArray.length()) {
+                val jsonObject = jsonArray.getJSONObject(i)
+                val tag = jsonObject.getString("tag")
+                val resource = jsonObject.getString("resource")
+
+                val resourceModel = FetchResourceModel(tag,resource)
+                list.add(resourceModel)
+            }
+        } catch (e: Exception) {
+            println("JSON parsing error: ${e.message}")
+            e.printStackTrace()
+            return emptyList()
+        }
+        return list
     }
 }
 
