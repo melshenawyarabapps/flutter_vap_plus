@@ -3,7 +3,7 @@
 # Run `pod lib lint flutter_vap.podspec` to validate before publishing.
 #
 Pod::Spec.new do |s|
-  s.name             = 'flutter_vap'
+  s.name             = 'flutter_vap_plus'
   s.version          = '0.0.1'
   s.summary          = 'A new Flutter plugin.'
   s.description      = <<-DESC

@@ -59,17 +59,17 @@
         //        [_view addvi];
 
         NSString *scaleType = args[@"scaleType"];
-        if([scaleType isEqualToString:@"FIT_CENTER"]){
-//            [_wrapView setContentMode:QGVAPWrapViewContentModeAspectFit];
-            _wrapView.contentMode = QGVAPWrapViewContentModeAspectFit;
-        }else if([scaleType isEqualToString:@"FIT_XY"]){
-//            [_wrapView setContentMode:QGVAPWrapViewContentModeAspectFill];
-            _wrapView.contentMode = QGVAPWrapViewContentModeAspectFill;
-
-        }else{
-//            [_wrapView setContentMode:QGVAPWrapViewContentModeScaleToFill];
-            _wrapView.contentMode = QGVAPWrapViewContentModeScaleToFill;
-        }
+//        if([scaleType isEqualToString:@"FIT_CENTER"]){
+////            [_wrapView setContentMode:QGVAPWrapViewContentModeAspectFit];
+//            _wrapView.contentMode = QGVAPWrapViewContentModeAspectFit;
+//        }else if([scaleType isEqualToString:@"FIT_XY"]){
+////            [_wrapView setContentMode:QGVAPWrapViewContentModeAspectFill];
+//            _wrapView.contentMode = QGVAPWrapViewContentModeAspectFill;
+//
+//        }else{
+////            [_wrapView setContentMode:QGVAPWrapViewContentModeScaleToFill];
+//            _wrapView.contentMode = QGVAPWrapViewContentModeScaleToFill;
+//        }
 //        _wrapView.contentMode = QGVAPWrapViewContentModeAspectFit;
 //        _wrapView.autoDestoryAfterFinish = YES;
 
@@ -162,10 +162,10 @@
     } else if ([@"stop" isEqualToString:call.method]) {
         [self stopPlayback];
         result(nil);
-    } else if ([@"fetchResource" isEqualToString:call.method]){
+    } else if ([@"setFetchResource" isEqualToString:call.method]){
         NSString *rawJson = (NSString *) call.arguments;
         _fetchResources = [FetchResourceModel fromRawJsonArray:rawJson];
-        
+        result(nil);
     }else {
         result(FlutterMethodNotImplemented);
     }
@@ -196,6 +196,7 @@
 
 //    [_wrapView playHWDMP4:path repeatCount:0 delegate:self];
     // Optionally, you can notify Flutter that playback has started
+    result(nil);
     [_methodChannel invokeMethod:@"onStart" arguments:@{@"status" : @"start"}];
 }
 
@@ -248,6 +249,7 @@
 - (NSString *)vapWrapview_contentForVapTag:(NSString *)tag resource:(QGVAPSourceInfo *)info{
     for(FetchResourceModel *model in _fetchResources){
         if([model.tag isEqualToString:tag]){
+            NSLog(@"%@", [[@"vapWrapview_contentForVapTaging:" stringByAppendingString:tag] stringByAppendingString:model.resource]);
             return model.resource;
         }
     }
