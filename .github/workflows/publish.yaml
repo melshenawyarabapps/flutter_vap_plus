@@ -28,20 +28,13 @@ jobs:
             core.exportVariable('PUB_TOKEN', pub_token)
 
       - name: 📢 Authenticate
-        shell: ${{ inputs.shell }}
         run: flutter pub pub token add https://pub.dev --env-var PUB_TOKEN
 
       - name: 📦 Install dependencies
-        shell: ${{ inputs.shell }}
         run: flutter pub get
-        working-directory: ${{ inputs.working-directory }}
 
       - name: 🌵 Dry Run
-        shell: ${{ inputs.shell }}
         run: flutter pub publish --dry-run
-        working-directory: ${{ inputs.working-directory }}
 
       - name: 📢 Publish
-        shell: ${{ inputs.shell }}
         run: flutter pub publish -f
-        working-directory: ${{ inputs.working-directory }}
