@@ -14,15 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Install Flutter
-        uses: subosito/flutter-action@v2
+      - uses: dart-lang/setup-dart@v1
         with:
-          flutter-version: '3.24.3'
+          sdk: 3.5.3
       - name: Install dependencies
-        run: flutter pub get
-      - name: Analyze
-        run: flutter analyze
-      - name: Check Publish Warnings
-        run: flutter pub publish --dry-run
+        run: dart pub get
+      # Here you can insert custom steps you need
+      # - run: dart tool/generate-code.dart
       - name: Publish
-        run: flutter pub publish --force
+        run: dart pub publish --force
