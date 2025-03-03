@@ -13,13 +13,35 @@ jobs:
       id-token: write # Required for authentication using OIDC
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: dart-lang/setup-dart@v1
+      - name: 📚 Git Checkout
+        uses: actions/checkout@v4
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          sdk: 3.5.3
-      - name: Install dependencies
-        run: dart pub get
-      # Here you can insert custom steps you need
-      # - run: dart tool/generate-code.dart
-      - name: Publish
-        run: dart pub publish --force
+          flutter-version: '3.24.3'
+
+      - name: 🔑 Get Id Token
+        uses: actions/github-script@v6
+        with:
+          script: |
+            let pub_token = await core.getIDToken('https://pub.dev')
+            core.exportVariable('PUB_TOKEN', pub_token)
+
+      - name: 📢 Authenticate
+        shell: ${{ inputs.shell }}
+        run: flutter pub pub token add https://pub.dev --env-var PUB_TOKEN
+
+      - name: 📦 Install dependencies
+        shell: ${{ inputs.shell }}
+        run: flutter pub get
+        working-directory: ${{ inputs.working-directory }}
+
+      - name: 🌵 Dry Run
+        shell: ${{ inputs.shell }}
+        run: flutter pub publish --dry-run
+        working-directory: ${{ inputs.working-directory }}
+
+      - name: 📢 Publish
+        shell: ${{ inputs.shell }}
+        run: flutter pub publish -f
+        working-directory: ${{ inputs.working-directory }}
