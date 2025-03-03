@@ -92,22 +92,11 @@ Future<void> _playFile(String path) async {
 
 5. 队列播放
 ```dart
-  _queuePlay() async {
-    // 模拟多个地方同时调用播放,使得队列执行播放。
-    QueueUtil.get("vapQueue").addTask(() => vapController.playPath(downloadPathList[0]));
-    QueueUtil.get("vapQueue").addTask(() => vapController.playPath(downloadPathList[1]));
-  }
-  
-  _queuePlay2()async{
+  _queuePlay()async{
     await vapController?.playPath(downloadPathList[0]);
     await vapController?.playPath(downloadPathList[1]);
     await _playAsset("static/demo.mp4");
   }
-```
-
-6. 取消队列播放
-```dart
-  QueueUtil.get("vapQueue").cancelTask();
 ```
 
 ### 例子

@@ -152,11 +152,6 @@ class _MyAppState extends State<MyApp> {
                       child: Text("queue play"),
                       onPressed: _queuePlay,
                     ),
-                    CupertinoButton(
-                      color: Colors.purple,
-                      child: Text("cancel queue play"),
-                      onPressed: _cancelQueuePlay,
-                    ),
                   ],
                 ),
                 Positioned.fill(
@@ -225,15 +220,11 @@ class _MyAppState extends State<MyApp> {
     await vapController?.playAsset(asset, fetchResources: fetchResources);
   }
 
-  _queuePlay() async {
-    // 模拟多个地方同时调用播放,使得队列执行播放。
+  Future<void> _queuePlay() async {
+    // 模拟多个地方同时调用播放,使得按顺序执行播放。
     // Simultaneously call playback in multiple places, making the queue perform playback.
     await vapController?.playPath(downloadPathList[0]);
     await vapController?.playPath(downloadPathList[1]);
     await _playAsset("static/demo.mp4");
-  }
-
-  _cancelQueuePlay() {
-    QueueUtil.get("vapQueue")?.cancelTask();
   }
 }

@@ -87,29 +87,18 @@ Future<void> _playFile(String path) async {
 }
 ```
 
-3. Stop play
+4. Stop play
 ```dart
   VapController.stop()
 ```
 
-4. Queue play
+5. Queue play
 ```dart
-  _queuePlay() async {。
-    // Simultaneously call playback in multiple places, making the queue perform playback.
-    QueueUtil.get("vapQueue").addTask(() => VapController.playPath(downloadPathList[0]));
-    QueueUtil.get("vapQueue").addTask(() => VapController.playPath(downloadPathList[1]));
-  }
-
-  _queuePlay2()async{
+  _queuePlay()async{
     await vapController?.playPath(downloadPathList[0]);
     await vapController?.playPath(downloadPathList[1]);
     await _playAsset("static/demo.mp4");
   }
-```
-
-5. Cancel queue playback
-```dart
-  QueueUtil.get("vapQueue").cancelTask();
 ```
 
 Example
