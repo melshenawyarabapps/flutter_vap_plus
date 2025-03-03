@@ -1,3 +1,7 @@
+## 1.2.9
+
+1. Update example code
+
 ## 1.2.8
 
 1. Fixed the issue with iOS fusion animation not playing

@@ -33,7 +33,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> initDownloadPath() async {
     Directory appDocDir = await getApplicationDocumentsDirectory();
     String rootPath = appDocDir.path;
-    downloadPathList = ["$rootPath/vap_demo1.mp4", "$rootPath/vap_demo2.mp4","$rootPath.vap_demo3.mp4"];
+    downloadPathList = ["$rootPath/vap_demo1.mp4", "$rootPath/vap_demo2.mp4"];
     print("downloadPathList:$downloadPathList");
   }
 
@@ -75,13 +75,15 @@ class _MyAppState extends State<MyApp> {
                     CupertinoButton(
                       color: Colors.purple,
                       child: Text("File3 play"),
-                      onPressed: () async{
-                        var avatarFile = await _getImageFileFromAssets('static/bg.jpeg');
-                        _playFile(downloadPathList[2],fetchResources: [
-                          FetchResourceModel(tag: 'key_ride_avatar', resource: avatarFile.path),
+                      onPressed: () async {
+                        var avatarFile =
+                            await _getImageFileFromAssets('static/bg.jpeg');
+                        _playFile(downloadPathList[2], fetchResources: [
                           FetchResourceModel(
-                              tag: 'key_ride_banner',
-                              resource: '测试用户1'),
+                              tag: 'key_ride_avatar',
+                              resource: avatarFile.path),
+                          FetchResourceModel(
+                              tag: 'key_ride_banner', resource: '测试用户1'),
                         ]);
                       },
                     ),
@@ -100,48 +102,50 @@ class _MyAppState extends State<MyApp> {
                             tag: 'key_ride_banner', resource: '测试用户1'),
                       ]),
                     ),
-                    Builder(
-                      builder: (context) {
-                        return CupertinoButton(
-                          color: Colors.purple,
-                          child: Text("dialog play"),
-                          onPressed: () {
-                            showDialog<void>(
-                              context: context,
-                              barrierDismissible: true,
-                              // false = user must tap button, true = tap outside dialog
-                              builder: (BuildContext dialogContext) {
-                                return AlertDialog(
-                                  backgroundColor: Colors.black45,
-                                  content: GestureDetector(
-                                    onTap: (){
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: SizedBox(
-                                      width: double.infinity,
-                                      height: double.infinity,
-                                      child: IgnorePointer(
-                                        child:
-                                        VapView(onControllerCreated: (controller) async{
-                                          var avatarFile = await _getImageFileFromAssets('static/bg.jpeg');
-                                          controller.playAsset('static/video.mp4',
-                                              fetchResources: [
-                                                FetchResourceModel(tag: 'key_ride_avatar', resource: avatarFile.path),
-                                                FetchResourceModel(
-                                                    tag: 'key_ride_banner',
-                                                    resource: '测试用户1'),
-                                              ]);
-                                        }),
-                                      ),
+                    Builder(builder: (context) {
+                      return CupertinoButton(
+                        color: Colors.purple,
+                        child: Text("dialog play"),
+                        onPressed: () {
+                          showDialog<void>(
+                            context: context,
+                            barrierDismissible: true,
+                            // false = user must tap button, true = tap outside dialog
+                            builder: (BuildContext dialogContext) {
+                              return AlertDialog(
+                                backgroundColor: Colors.black45,
+                                content: GestureDetector(
+                                  onTap: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    child: IgnorePointer(
+                                      child: VapView(onControllerCreated:
+                                          (controller) async {
+                                        var avatarFile =
+                                            await _getImageFileFromAssets(
+                                                'static/bg.jpeg');
+                                        controller.playAsset('static/video.mp4',
+                                            fetchResources: [
+                                              FetchResourceModel(
+                                                  tag: 'key_ride_avatar',
+                                                  resource: avatarFile.path),
+                                              FetchResourceModel(
+                                                  tag: 'key_ride_banner',
+                                                  resource: '测试用户1'),
+                                            ]);
+                                      }),
                                     ),
                                   ),
-                                );
-                              },
-                            );
-                          },
-                        );
-                      }
-                    ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      );
+                    }),
                     CupertinoButton(
                       color: Colors.purple,
                       child: Text("stop play"),
@@ -187,11 +191,11 @@ class _MyAppState extends State<MyApp> {
       final byteData = await rootBundle.load(path);
       final buffer = byteData.buffer;
       await file.create(recursive: true);
-      return file
-          .writeAsBytes(buffer.asUint8List(byteData.offsetInBytes,
-          byteData.lengthInBytes));
+      return file.writeAsBytes(
+          buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
     }
   }
+
   _download() async {
     await Dio().download(
         "https://res.cloudinary.com/dkmchpua1/video/upload/v1737623468/zta2wxsuokcskw0bhar7.mp4",
@@ -199,17 +203,15 @@ class _MyAppState extends State<MyApp> {
     await Dio().download(
         "https://res.cloudinary.com/dkmchpua1/video/upload/v1737624783/vcg9co6yyfqsadgety1n.mp4",
         downloadPathList[1]);
-    await Dio().download(
-        "https://dev.file.momooline.com/svgasource/manager-1b2f9f59-faca-48b2-82ac-412caf63f0b2.mp4",
-        downloadPathList[2]);
     setState(() {
       isDownload = true;
     });
   }
 
-  Future<void> _playFile(String path,{List<FetchResourceModel> fetchResources = const []}) async {
+  Future<void> _playFile(String path,
+      {List<FetchResourceModel> fetchResources = const []}) async {
     try {
-      await vapController?.playPath(path,fetchResources: fetchResources);
+      await vapController?.playPath(path, fetchResources: fetchResources);
     } catch (e, s) {
       print(s);
     }
