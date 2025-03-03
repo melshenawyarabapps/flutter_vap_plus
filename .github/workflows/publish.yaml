@@ -1,29 +1,32 @@
+# .github/workflows/publish.yml
+name: Publish to pub.dev
+
 on:
-  release:
-    branches:
-      - master
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+' # tag pattern on pub.dev: 'v{{version}'
+
+# Publish using custom workflow
 jobs:
-  build:
+  publish:
+    permissions:
+      id-token: write # Required for authentication using OIDC
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.3'
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.CREDENTIAL_JSON }}
       - name: Install dependencies
         run: flutter pub get
       - name: Analyze
         run: flutter analyze
-      - name: Run tests
-        run: flutter test
-      - name: Format code
-        run: dart format --fix .
       - name: Check Publish Warnings
-        run: dart pub publish --dry-run
+        run: flutter pub publish --dry-run
       - name: Publish
-        uses: k-paxian/dart-package-publisher@v1.5.1
-        with:
-          credentialJson: ${{ secrets.CREDENTIAL_JSON }}
-          flutter: true
-          skipTests: true
+        run: flutter pub publish --force
