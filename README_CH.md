@@ -13,13 +13,26 @@ VAP（Video Animation Player）是企鹅电竞开发，用于播放酷炫动画�
 - 相比Lottie，能实现更复杂的动画效果(比如粒子特效)
 
 ### 预览
-![image](http://file.jinxianyun.com/flutter_vap.gif)
+![image](https://github.com/Tencent/vap/raw/master/images/anim1.gif)
 
-[video for youtube](https://youtu.be/OCLkFhcYqwA)
+而且VAP还能在动画中融入自定义的属性（比如用户名称, 头像）
 
-[video for qiniu](http://file.jinxianyun.com/flutter_vap.mp4)
+![image](https://github.com/Tencent/vap/raw/master/images/anim2.gif)
 
-[apk download](http://file.jinxianyun.com/flutter_vap.apk)
+## 性能简述
+
+
+-|文件大小|解码方式|特效支持
+---|---|---|---
+Lottie|无法导出|软解|无粒子特效
+GIF|4.6M|软解|只支持8位色彩
+Apng|10.6M|软解|全支持
+Webp|9.2M|软解|全支持
+mp4|1.5M|硬解|无透明背景
+VAP|***1.5M***|***硬解***|***全支持***
+
+
+实验参数参考 [Introduction.md](./Introduction.md)
 
 ### 安装
 ```

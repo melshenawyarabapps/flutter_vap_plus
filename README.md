@@ -15,13 +15,27 @@ VAP（Video Animation Player）is developed by Penguin E-sports and is used to p
 - Compared with Lottie, it can achieve more complex animation effects (such as particle effects)
 
 ### Preview
-![image](http://file.jinxianyun.com/flutter_vap.gif)
+![image](https://github.com/Tencent/vap/raw/master/images/anim1.gif)
 
-[video for youtube](https://youtu.be/OCLkFhcYqwA)
+And VAP can also merge custom attributes (such as user name, avatar) into the animation.
 
-[video for qiniu](http://file.jinxianyun.com/flutter_vap.mp4)
+![image](https://github.com/Tencent/vap/raw/master/images/anim2.gif)
 
-[apk download](http://file.jinxianyun.com/flutter_vap.apk)
+## Performance
+
+
+-|file size|decoder|effects support
+---|---|---|---
+Lottie|can't generate|software decoder|not support particle effects
+GIF|4.6M|software decoder|only support 8 bit color format
+Apng|10.6M|software decoder|all support
+Webp|9.2M|software decoder|all support
+mp4|1.5M|hardware decoder|not support alpha channel
+VAP|***1.5M***|***hardware decoder***|***all support***
+
+
+More detail: [Introduction.md](./Introduction.md)
+
 
 ### Setup
 ```
