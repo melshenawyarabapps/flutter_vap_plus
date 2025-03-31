@@ -23,6 +23,7 @@ class _MyAppState extends State<MyApp> {
   List<String> downloadPathList = [];
   bool isDownload = false;
   VapController? vapController;
+  VapScaleFit vapScaleFit = VapScaleFit.FIT_XY;
 
   @override
   void initState() {
@@ -74,38 +75,13 @@ class _MyAppState extends State<MyApp> {
                     ),
                     CupertinoButton(
                       color: Colors.purple,
-                      child: Text("File3 play"),
-                      onPressed: () async {
-                        var avatarFile =
-                            await _getImageFileFromAssets('static/bg.jpeg');
-                        _playFile(downloadPathList[2], fetchResources: [
-                          FetchResourceModel(
-                              tag: 'key_ride_avatar',
-                              resource: avatarFile.path),
-                          FetchResourceModel(
-                              tag: 'key_ride_banner', resource: '测试用户1'),
-                        ]);
-                      },
-                    ),
-                    CupertinoButton(
-                      color: Colors.purple,
                       child: Text("asset play"),
                       onPressed: () => _playAsset("static/demo.mp4"),
-                    ),
-                    CupertinoButton(
-                      color: Colors.purple,
-                      child: Text("asset2 play"),
-                      onPressed: () =>
-                          _playAsset("static/video.mp4", fetchResources: [
-                        // FetchResourceModel(tag: 'tag', resource: '1.png'),
-                        FetchResourceModel(
-                            tag: 'key_ride_banner', resource: '测试用户1'),
-                      ]),
                     ),
                     Builder(builder: (context) {
                       return CupertinoButton(
                         color: Colors.purple,
-                        child: Text("dialog play"),
+                        child: Text("fusion animation play"),
                         onPressed: () {
                           showDialog<void>(
                             context: context,
@@ -113,7 +89,7 @@ class _MyAppState extends State<MyApp> {
                             // false = user must tap button, true = tap outside dialog
                             builder: (BuildContext dialogContext) {
                               return AlertDialog(
-                                backgroundColor: Colors.black45,
+                                backgroundColor: Colors.transparent,
                                 content: GestureDetector(
                                   onTap: () {
                                     Navigator.of(context).pop();
@@ -122,21 +98,30 @@ class _MyAppState extends State<MyApp> {
                                     width: double.infinity,
                                     height: double.infinity,
                                     child: IgnorePointer(
-                                      child: VapView(onControllerCreated:
-                                          (controller) async {
-                                        var avatarFile =
-                                            await _getImageFileFromAssets(
-                                                'static/bg.jpeg');
-                                        controller.playAsset('static/video.mp4',
-                                            fetchResources: [
-                                              FetchResourceModel(
-                                                  tag: 'key_ride_avatar',
-                                                  resource: avatarFile.path),
-                                              FetchResourceModel(
-                                                  tag: 'key_ride_banner',
-                                                  resource: '测试用户1'),
-                                            ]);
-                                      }),
+                                      child: VapView(
+                                          fit: VapScaleFit.FIT_CENTER,
+                                          onControllerCreated:
+                                              (controller) async {
+                                            var avatarFile =
+                                                await _getImageFileFromAssets(
+                                                    'static/bg.jpeg');
+                                            await controller.playAsset(
+                                                'static/video.mp4',
+                                                fetchResources: [
+                                                  FetchResourceModel(
+                                                      tag: '01',
+                                                      resource: '测试文本01'),
+                                                  FetchResourceModel(
+                                                      tag: '02',
+                                                      resource: '测试文本02'),
+                                                  FetchResourceModel(
+                                                      tag: '03',
+                                                      resource:
+                                                          avatarFile.path),
+                                                ]);
+
+                                            Navigator.of(context).pop();
+                                          }),
                                     ),
                                   ),
                                 ),
