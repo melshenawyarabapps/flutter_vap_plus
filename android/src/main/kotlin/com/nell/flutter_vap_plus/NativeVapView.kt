@@ -46,6 +46,15 @@ internal class NativeVapView(
     override fun onFlutterViewAttached(flutterView: View) {
         super.onFlutterViewAttached(flutterView)
 
+        /// 循环播放
+        val repeatCount = creationParams?.get("repeatCount") as Int
+        if (repeatCount == -1) {
+            vapView.setLoop(Int.MAX_VALUE)
+        }
+        else {
+            vapView.setLoop(repeatCount)
+        }
+
         vapView.setScaleType(
             ScaleType.valueOf(
                 (creationParams?.get("scaleType") ?: "FIT_CENTER").toString()
