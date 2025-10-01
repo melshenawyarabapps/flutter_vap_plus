@@ -39,6 +39,7 @@ class _VapViewState extends State<VapView> {
       return VapViewForIos(
         onControllerCreated: onControllerCreated,
         fit: widget.fit,
+        repeatCount: widget.repeatCount ?? 1,
         onEvent: widget.onEvent,
       );
     }

@@ -195,7 +195,7 @@
     _wrapView.autoDestoryAfterFinish = YES;
     
     [_view addSubview:_wrapView];
-    [_wrapView vapWrapView_playHWDMP4:path repeatCount:0 delegate:self];
+    [_wrapView vapWrapView_playHWDMP4:path repeatCount:_args["repeatCount"] delegate:self];
 //    [_wrapView playHWDMp4:path repeatCount:0 delegate:self];
 
 //    [_wrapView playHWDMP4:path repeatCount:0 delegate:self];
