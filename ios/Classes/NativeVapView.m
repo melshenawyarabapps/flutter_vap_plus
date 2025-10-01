@@ -139,10 +139,14 @@
         NSString *asset = call.arguments[@"asset"];
         if (asset) {
 //            NSString *assetPath = [[NSBundle mainBundle] pathForResource:asset ofType:nil];
-            NSString *flutterAssetsPath = [[NSBundle mainBundle] pathForResource:@"flutter_assets" ofType:nil];
-            
-                NSString *assetPath = [flutterAssetsPath stringByAppendingPathComponent:asset];
-            
+            NSString *appFrameworkPath = [[NSBundle mainBundle] privateFrameworksURL].path;
+            NSString *appFrameworkName = @"App.framework";
+
+            // 拼接完整路径
+            NSString *flutterAssetsPath = [appFrameworkPath stringByAppendingPathComponent:appFrameworkName];
+            flutterAssetsPath = [flutterAssetsPath stringByAppendingPathComponent:@"flutter_assets"];
+
+            NSString *assetPath = [flutterAssetsPath stringByAppendingPathComponent:asset];
                 NSLog(@"Asset path: %@", assetPath);
             
             
