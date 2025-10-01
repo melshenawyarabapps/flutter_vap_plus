@@ -4,13 +4,13 @@
 #import "FetchResourceModel.h"
 #import <Flutter/Flutter.h>
 
-@interface NativeVapView : NSObject <FlutterPlatformView, VAPWrapViewDelegate>
-
+@interface NativeVapView : NSObject <FlutterPlatformView, VAPWrapViewDelegate> {
+    NSString *_lastPlayedPath;   // 🔹 Store last path for looping
+}
 - (instancetype)initWithFrame:(CGRect)frame
                viewIdentifier:(int64_t)viewId
                     arguments:(id _Nullable)args
               binaryMessenger:(NSObject<FlutterBinaryMessenger> *)messenger;
-
 @end
 
 @implementation NativeVapViewFactory {
@@ -128,6 +128,8 @@
     }
 
     playStatus = YES;
+    _lastPlayedPath = path;  // 🔹 Save path for looping
+
     _wrapView = [[QGVAPWrapView alloc] initWithFrame:_view.bounds];
     _wrapView.center = _view.center;
     _wrapView.contentMode = QGVAPWrapViewContentModeAspectFit;
@@ -135,8 +137,7 @@
 
     [_view addSubview:_wrapView];
 
-    // 🔹 Read repeatCount from args
-    NSInteger repeatCount = 0; // default
+    NSInteger repeatCount = 0;
     if ([_args isKindOfClass:[NSDictionary class]]) {
         NSNumber *repeatArg = _args[@"repeatCount"];
         if (repeatArg != nil && [repeatArg isKindOfClass:[NSNumber class]]) {
@@ -144,12 +145,10 @@
         }
     }
 
-    // 🔹 If repeatCount = -1, loop infinitely
-    if (repeatCount == -1) {
-        repeatCount = NSIntegerMax;
-    }
+    // if infinite repeat (-1), just play once and restart in delegate
+    NSInteger actualRepeat = (repeatCount == -1) ? 1 : repeatCount;
 
-    [_wrapView vapWrapView_playHWDMP4:path repeatCount:repeatCount delegate:self];
+    [_wrapView vapWrapView_playHWDMP4:path repeatCount:actualRepeat delegate:self];
 
     result(nil);
     [_methodChannel invokeMethod:@"onStart" arguments:@{@"status" : @"start"}];
@@ -187,6 +186,26 @@
 }
 
 - (void)vapWrap_viewDidFinishPlayMP4:(NSInteger)totalFrameCount view:(VAPView *)container {
+    NSInteger repeatCount = 0;
+    if ([_args isKindOfClass:[NSDictionary class]]) {
+        NSNumber *repeatArg = _args[@"repeatCount"];
+        if (repeatArg != nil && [repeatArg isKindOfClass:[NSNumber class]]) {
+            repeatCount = [repeatArg integerValue];
+        }
+    }
+
+    if (repeatCount == -1 && _lastPlayedPath != nil) {
+        // 🔁 Restart playback for infinite loop
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (self->_wrapView) {
+                [self->_wrapView vapWrapView_playHWDMP4:self->_lastPlayedPath
+                                            repeatCount:1
+                                               delegate:self];
+            }
+        });
+        return; // Don’t notify Flutter complete
+    }
+
     playStatus = NO;
     dispatch_async(dispatch_get_main_queue(), ^{
         [self->_methodChannel invokeMethod:@"onComplete" arguments:@{@"status" : @"complete"}];
