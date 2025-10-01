@@ -242,11 +242,14 @@
 }
 
 - (void)vapWrap_viewDidFinishPlayMP4:(NSInteger)totalFrameCount view:(VAPView *)container {
-    playStatus = NO;
-    dispatch_async(dispatch_get_main_queue(), ^{
+    if(_args["repeatCount"]==1){
+        playStatus = NO;
+        dispatch_async(dispatch_get_main_queue(), ^{
 
-    [self->_methodChannel invokeMethod:@"onComplete" arguments:@{@"status" : @"complete"}];
-    });
+            [self->_methodChannel invokeMethod:@"onComplete" arguments:@{@"status" : @"complete"}];
+        });
+    }
+
 
 }
 
