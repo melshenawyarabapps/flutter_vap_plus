@@ -30,7 +30,6 @@ class VapViewForAndroid extends StatelessWidget {
       creationParams: creationParams,
       creationParamsCodec: StandardMessageCodec(),
       onPlatformViewCreated: (viewId) async{
-        await Future.delayed(const Duration(milliseconds: 1000));
         onControllerCreated(VapController(
           viewId: viewId,
           onEvent: onEvent
